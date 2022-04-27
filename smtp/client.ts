@@ -189,13 +189,9 @@ export class SMTPClient {
 	 * @returns {void}
 	 */
 	protected _connect(stack: MessageStack) {
-		/**
-		 * @param {Error} err callback error
-		 * @returns {void}
-		 */
-		const connect = (err: Error) => {
+		const connect = (err: Error | null) => {
 			if (!err) {
-				const begin = (err: Error) => {
+				const begin = (err: Error | null) => {
 					if (!err) {
 						this.ready = true;
 						this._poll();
@@ -276,11 +272,7 @@ export class SMTPClient {
 	 * @returns {function(Error): void} callback
 	 */
 	protected _sendsmtp(stack: MessageStack, next: (msg: MessageStack) => void) {
-		/**
-		 * @param {Error} [err] error
-		 * @returns {void}
-		 */
-		return (err: Error) => {
+		return (err: Error | null) => {
 			if (!err && next) {
 				next.apply(this, [stack]);
 			} else {

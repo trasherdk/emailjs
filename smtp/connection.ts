@@ -57,21 +57,19 @@ const log = (...args: any[]) => {
 	}
 };
 
-/**
- * @param {function(...any[]): void} callback the function to call
- * @param {...any[]} args the arguments to apply to the function
- * @returns {void}
- */
-const caller = (callback?: (...rest: any[]) => void, ...args: any[]) => {
-	if (typeof callback === 'function') {
-		callback(...args);
-	}
-};
-
 export type SMTPSocketOptions = Omit<
 	ConnectionOptions,
 	'port' | 'host' | 'path' | 'socket' | 'timeout' | 'secureContext'
 >;
+
+export type SMTPCommandCallback = (
+	err: Error | SMTPError | null,
+	data?:
+		| string
+		| { code: string | number; data: string; message: string }
+		| null,
+	message?: string
+) => void;
 
 export interface SMTPConnectionOptions {
 	timeout: number | null;
@@ -116,7 +114,7 @@ export class SMTPConnection extends EventEmitter {
 	protected tls: boolean | SMTPSocketOptions = false;
 	protected port: number;
 
-	private greylistResponseTracker = new WeakSet<(...rest: any[]) => void>();
+	private greylistResponseTracker = new WeakSet<SMTPCommandCallback>();
 
 	/**
 	 * SMTP class written using python's (2.7) smtplib.py as a base.
@@ -218,14 +216,14 @@ export class SMTPConnection extends EventEmitter {
 	 * NOTE: `host` is trimmed before being used to establish a connection; however, the original untrimmed value will still be visible in configuration.
 	 *
 	 * @public
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @param {number} [port] the port to use for the connection
 	 * @param {string} [host] the hostname to use for the connection
 	 * @param {ConnectOptions} [options={}] the options
 	 * @returns {void}
 	 */
 	public connect(
-		callback: (...rest: any[]) => void,
+		callback: SMTPCommandCallback,
 		port: number = this.port,
 		host: string = this.host,
 		options: ConnectOptions = {}
@@ -252,8 +250,7 @@ export class SMTPConnection extends EventEmitter {
 					!this.sock.authorized
 				) {
 					this.close(true);
-					caller(
-						callback,
+					callback(
 						SMTPError.create(
 							'could not establish an ssl connection',
 							SMTPErrorStates.CONNECTIONAUTH
@@ -275,8 +272,7 @@ export class SMTPConnection extends EventEmitter {
 			} else {
 				this.close(true);
 				this.log(err);
-				caller(
-					callback,
+				callback(
 					SMTPError.create(
 						'could not connect',
 						SMTPErrorStates.COULDNOTCONNECT,
@@ -295,18 +291,17 @@ export class SMTPConnection extends EventEmitter {
 					return;
 				}
 				this.close(true);
-				caller(callback, err);
+				callback(err);
 			} else if (msg.code == '220') {
 				this.log(msg.data);
 
 				// might happen first, so no need to wait on connected()
 				this._state = SMTPState.CONNECTED;
-				caller(callback, null, msg.data);
+				callback(null, msg.data);
 			} else {
 				this.log(`response (data): ${msg.data}`);
 				this.quit(() => {
-					caller(
-						callback,
+					callback(
 						SMTPError.create(
 							'bad response on connection',
 							SMTPErrorStates.BADRESPONSE,
@@ -343,19 +338,19 @@ export class SMTPConnection extends EventEmitter {
 	/**
 	 * @public
 	 * @param {string} str the string to send
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @returns {void}
 	 */
-	public send(str: string, callback: (...args: any[]) => void) {
+	public send(str: string, callback: SMTPCommandCallback) {
 		if (this.sock != null && this._state === SMTPState.CONNECTED) {
 			this.log(str);
 
 			this.sock.once('response', (err, msg) => {
 				if (err) {
-					caller(callback, err);
+					callback(err, undefined);
 				} else {
 					this.log(msg.data);
-					caller(callback, null, msg);
+					callback(null, msg);
 				}
 			});
 			if (this.sock.writable) {
@@ -363,12 +358,12 @@ export class SMTPConnection extends EventEmitter {
 			}
 		} else {
 			this.close(true);
-			caller(
-				callback,
+			callback(
 				SMTPError.create(
 					'no connection has been established',
 					SMTPErrorStates.NOCONNECTION
-				)
+				),
+				undefined
 			);
 		}
 	}
@@ -376,13 +371,13 @@ export class SMTPConnection extends EventEmitter {
 	/**
 	 * @public
 	 * @param {string} cmd command to issue
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @param {(number[] | number)} [codes=[250]] array codes
 	 * @returns {void}
 	 */
 	public command(
 		cmd: string,
-		callback: (...rest: any[]) => void,
+		callback: SMTPCommandCallback,
 		codes: number[] | number = [250]
 	) {
 		const codesArray = Array.isArray(codes)
@@ -391,16 +386,22 @@ export class SMTPConnection extends EventEmitter {
 			? [codes]
 			: [250];
 
-		const response = (
-			err: Error | null | undefined,
-			msg: { code: string | number; data: string; message: string }
-		) => {
+		const response: SMTPCommandCallback = (err, msg) => {
 			if (err) {
-				caller(callback, err);
+				callback(err);
+			} else if (msg == null || typeof msg === 'string') {
+				callback(
+					SMTPError.create(
+						'Invalid message in response',
+						SMTPErrorStates.BADRESPONSE,
+						err,
+						msg
+					)
+				);
 			} else {
 				const code = Number(msg.code);
 				if (codesArray.indexOf(code) !== -1) {
-					caller(callback, err, msg.data, msg.message);
+					callback(err, msg.data, msg.message);
 				} else if (
 					(code === 450 || code === 451) &&
 					msg.message.toLowerCase().includes('greylist') &&
@@ -415,8 +416,7 @@ export class SMTPConnection extends EventEmitter {
 					const errorMessage = `bad response on command '${
 						cmd.split(' ')[0]
 					}'${suffix}`;
-					caller(
-						callback,
+					callback(
 						SMTPError.create(
 							errorMessage,
 							SMTPErrorStates.BADRESPONSE,
@@ -442,35 +442,35 @@ export class SMTPConnection extends EventEmitter {
 	 * As this command was deprecated by rfc2821, it should only be used for compatibility with non-compliant servers.
 	 * @see https://tools.ietf.org/html/rfc2821#appendix-F.3
 	 *
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @param {string} domain the domain to associate with the 'helo' request
 	 * @returns {void}
 	 */
-	public helo(callback: (...rest: any[]) => void, domain?: string) {
+	public helo(callback: SMTPCommandCallback, domain?: string) {
 		this.command(`helo ${domain || this.domain}`, (err, data) => {
 			if (err) {
-				caller(callback, err);
+				callback(err);
 			} else {
-				this.parse_smtp_features(data);
-				caller(callback, err, data);
+				this.parse_smtp_features(data as string);
+				callback(err, data);
 			}
 		});
 	}
 
 	/**
 	 * @public
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @returns {void}
 	 */
-	public starttls(callback: (...rest: any[]) => void) {
-		const response = (err: Error, msg: { data: unknown }) => {
+	public starttls(callback: SMTPCommandCallback) {
+		const response: SMTPCommandCallback = (err, msg) => {
 			if (this.sock == null) {
 				throw new Error('null socket');
 			}
 
 			if (err) {
 				err.message += ' while establishing a starttls session';
-				caller(callback, err);
+				callback(err);
 			} else {
 				const secureContext = createSecureContext(
 					typeof this.tls === 'object' ? this.tls : {}
@@ -479,7 +479,7 @@ export class SMTPConnection extends EventEmitter {
 
 				secureSocket.on('error', (err: Error) => {
 					this.close(true);
-					caller(callback, err);
+					callback(err);
 				});
 
 				this._secure = true;
@@ -488,7 +488,7 @@ export class SMTPConnection extends EventEmitter {
 				new SMTPResponseMonitor(this.sock, this.timeout, () =>
 					this.close(true)
 				);
-				caller(callback, msg.data);
+				callback(null, typeof msg === 'string' ? msg : msg?.data);
 			}
 		};
 
@@ -527,22 +527,22 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @param {string} domain the domain to associate with the 'ehlo' request
 	 * @returns {void}
 	 */
-	public ehlo(callback: (...rest: any[]) => void, domain?: string) {
+	public ehlo(callback: SMTPCommandCallback, domain?: string) {
 		this.features = {};
 		this.command(`ehlo ${domain || this.domain}`, (err, data) => {
 			if (err) {
-				caller(callback, err);
+				callback(err);
 			} else {
-				this.parse_smtp_features(data);
+				this.parse_smtp_features(data as string);
 
 				if (this.tls && !this._secure) {
 					this.starttls(() => this.ehlo(callback, domain));
 				} else {
-					caller(callback, err, data);
+					callback(err, data);
 				}
 			}
 		});
@@ -560,67 +560,67 @@ export class SMTPConnection extends EventEmitter {
 	/**
 	 * @public
 	 * @description SMTP 'help' command, returns text from the server
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @param {string} domain the domain to associate with the 'help' request
 	 * @returns {void}
 	 */
-	public help(callback: (...rest: any[]) => void, domain: string) {
+	public help(callback: SMTPCommandCallback, domain: string) {
 		this.command(domain ? `help ${domain}` : 'help', callback, [211, 214]);
 	}
 
 	/**
 	 * @public
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @returns {void}
 	 */
-	public rset(callback: (...rest: any[]) => void) {
+	public rset(callback: SMTPCommandCallback) {
 		this.command('rset', callback);
 	}
 
 	/**
 	 * @public
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @returns {void}
 	 */
-	public noop(callback: (...rest: any[]) => void) {
+	public noop(callback: SMTPCommandCallback) {
 		this.send('noop', callback);
 	}
 
 	/**
 	 * @public
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @param {string} from the sender
 	 * @returns {void}
 	 */
-	public mail(callback: (...rest: any[]) => void, from: string) {
+	public mail(callback: SMTPCommandCallback, from: string) {
 		this.command(`mail FROM:${from}`, callback);
 	}
 
 	/**
 	 * @public
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @param {string} to the receiver
 	 * @returns {void}
 	 */
-	public rcpt(callback: (...rest: any[]) => void, to: string) {
+	public rcpt(callback: SMTPCommandCallback, to: string) {
 		this.command(`RCPT TO:${to}`, callback, [250, 251]);
 	}
 
 	/**
 	 * @public
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @returns {void}
 	 */
-	public data(callback: (...rest: any[]) => void) {
+	public data(callback: SMTPCommandCallback) {
 		this.command('data', callback, [354]);
 	}
 
 	/**
 	 * @public
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @returns {void}
 	 */
-	public data_end(callback: (...rest: any[]) => void) {
+	public data_end(callback: SMTPCommandCallback) {
 		this.command(`${CRLF}.`, callback);
 	}
 
@@ -638,10 +638,10 @@ export class SMTPConnection extends EventEmitter {
 	 * @public
 	 * @description SMTP 'verify' command -- checks for address validity.
 	 * @param {string} address the address to validate
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @returns {void}
 	 */
-	public verify(address: string, callback: (...rest: any[]) => void) {
+	public verify(address: string, callback: SMTPCommandCallback) {
 		this.command(`vrfy ${address}`, callback, [250, 251, 252]);
 	}
 
@@ -649,10 +649,10 @@ export class SMTPConnection extends EventEmitter {
 	 * @public
 	 * @description SMTP 'expn' command -- expands a mailing list.
 	 * @param {string} address the mailing list to expand
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @returns {void}
 	 */
-	public expn(address: string, callback: (...rest: any[]) => void) {
+	public expn(address: string, callback: SMTPCommandCallback) {
 		this.command(`expn ${address}`, callback);
 	}
 
@@ -663,23 +663,21 @@ export class SMTPConnection extends EventEmitter {
 	 * If there has been no previous EHLO or HELO command self session, self
 	 * method tries ESMTP EHLO first.
 	 *
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @param {string} [domain] the domain to associate with the command
 	 * @returns {void}
 	 */
 	public ehlo_or_helo_if_needed(
-		callback: (...rest: any[]) => void,
+		callback: SMTPCommandCallback,
 		domain?: string
 	) {
 		// is this code callable...?
 		if (!this.features) {
-			const response = (err: Error, data: unknown) =>
-				caller(callback, err, data);
 			this.ehlo((err, data) => {
 				if (err) {
-					this.helo(response, domain);
+					this.helo(callback, domain);
 				} else {
-					caller(callback, err, data);
+					callback(err, data);
 				}
 			}, domain);
 		}
@@ -695,14 +693,14 @@ export class SMTPConnection extends EventEmitter {
 	 *
 	 * This method will return normally if the authentication was successful.
 	 *
-	 * @param {function(...any[]): void} callback function to call after response
+	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @param {string} [user] the username to authenticate with
 	 * @param {string} [password] the password for the authentication
 	 * @param {{ method: string, domain: string }} [options] login options
 	 * @returns {void}
 	 */
 	public login(
-		callback: (...rest: any[]) => void,
+		callback: SMTPCommandCallback,
 		user?: string,
 		password?: string,
 		options: { method?: string; domain?: string } = {}
@@ -717,7 +715,7 @@ export class SMTPConnection extends EventEmitter {
 
 		const initiate = (err: Error | null | undefined, data: unknown) => {
 			if (err) {
-				caller(callback, err);
+				callback(err);
 				return;
 			}
 
@@ -779,8 +777,7 @@ export class SMTPConnection extends EventEmitter {
 			const failed = (err: Error, data: unknown) => {
 				this.loggedin = false;
 				this.close(); // if auth is bad, close the connection, it won't get better by itself
-				caller(
-					callback,
+				callback(
 					SMTPError.create(
 						'authorization.failed',
 						SMTPErrorStates.AUTHFAILED,
@@ -790,36 +787,21 @@ export class SMTPConnection extends EventEmitter {
 				);
 			};
 
-			/**
-			 * @param {Error} err err
-			 * @param {unknown} data data
-			 * @returns {void}
-			 */
-			const response = (err: Error | null | undefined, data: unknown) => {
+			const response: SMTPCommandCallback = (err, data) => {
 				if (err) {
 					failed(err, data);
 				} else {
 					this.loggedin = true;
-					caller(callback, err, data);
+					callback(err, data);
 				}
 			};
 
-			/**
-			 * @param {Error} err err
-			 * @param {unknown} data data
-			 * @param {string} msg msg
-			 * @returns {void}
-			 */
-			const attempt = (
-				err: Error | null | undefined,
-				data: unknown,
-				msg: string
-			) => {
+			const attempt: SMTPCommandCallback = (err, data, msg) => {
 				if (err) {
 					failed(err, data);
 				} else {
 					if (method === AUTH_METHODS['CRAM-MD5']) {
-						this.command(encodeCramMd5(msg), response, [235, 503]);
+						this.command(encodeCramMd5(msg as string), response, [235, 503]);
 					} else if (method === AUTH_METHODS.LOGIN) {
 						this.command(
 							Buffer.from(login.password()).toString('base64'),
@@ -830,13 +812,7 @@ export class SMTPConnection extends EventEmitter {
 				}
 			};
 
-			/**
-			 * @param {Error} err err
-			 * @param {unknown} data data
-			 * @param {string} msg msg
-			 * @returns {void}
-			 */
-			const attemptUser = (err: Error, data: unknown) => {
+			const attemptUser: SMTPCommandCallback = (err, data) => {
 				if (err) {
 					failed(err, data);
 				} else {
@@ -872,8 +848,7 @@ export class SMTPConnection extends EventEmitter {
 					);
 					break;
 				default:
-					caller(
-						callback,
+					callback(
 						SMTPError.create(
 							'no form of authorization supported',
 							SMTPErrorStates.AUTHNOTSUPPORTED,
@@ -918,14 +893,14 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {function(...any[]): void} [callback] function to call after response
+	 * @param {SMTPCommandCallback} [callback] function to call after response
 	 * @returns {void}
 	 */
-	public quit(callback?: (...rest: any[]) => void) {
+	public quit(callback?: SMTPCommandCallback) {
 		this.command(
 			'quit',
 			(err, data) => {
-				caller(callback, err, data);
+				callback?.(err, data);
 				this.close();
 			},
 			[221, 250]
