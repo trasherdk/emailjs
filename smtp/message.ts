@@ -76,7 +76,7 @@ export interface MessageHeaders {
 	'return-path'?: string | null;
 	date?: string;
 	from: string | string[];
-	to: string | string[];
+	to?: string | string[];
 	cc?: string | string[];
 	bcc?: string | string[];
 	subject: string;
