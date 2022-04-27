@@ -1,11 +1,8 @@
 import { promisify } from 'util';
 
 import test from 'ava';
-import { simpleParser } from 'mailparser';
-import type { ParsedMail, AddressObject } from 'mailparser';
 import { SMTPServer } from 'smtp-server';
 
-import type { MessageHeaders } from '../email.js';
 import {
 	DEFAULT_TIMEOUT,
 	SMTPClient,
@@ -13,7 +10,6 @@ import {
 	isRFC2822Date,
 } from '../email.js';
 
-const parseMap = new Map<string, ParsedMail>();
 const port = 3333;
 let greylistPort = 4444;
 
@@ -32,29 +28,7 @@ const server = new SMTPServer({
 			return callback(new Error('invalid user / pass'));
 		}
 	},
-	async onData(stream, _session, callback: () => void) {
-		const mail = await simpleParser(stream, {
-			skipHtmlToText: true,
-			skipTextToHtml: true,
-			skipImageLinks: true,
-		} as Record<string, unknown>);
-
-		parseMap.set(mail.subject as string, mail);
-		callback();
-	},
 });
-
-async function send(headers: Partial<MessageHeaders>) {
-	return new Promise<ParsedMail>((resolve, reject) => {
-		client.send(new Message(headers), (err) => {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(parseMap.get(headers.subject as string) as ParsedMail);
-			}
-		});
-	});
-}
 
 test.before(async (t) => {
 	server.listen(port, t.pass);
@@ -165,17 +139,17 @@ test('client accepts array sender', async (t) => {
 
 test('client rejects message without `from` header', async (t) => {
 	const error = await t.throwsAsync(
-		send({
+		client.sendAsync({
 			subject: 'this is a test TEXT message from emailjs',
 			text: "It is hard to be brave when you're only a Very Small Animal.",
-		})
+		} as never)
 	);
 	t.is(error?.message, 'Message must have a `from` header');
 });
 
 test('client rejects message without `to`, `cc`, or `bcc` header', async (t) => {
 	const error = await t.throwsAsync(
-		send({
+		client.sendAsync({
 			subject: 'this is a test TEXT message from emailjs',
 			from: 'piglet@gmail.com',
 			text: "It is hard to be brave when you're only a Very Small Animal.",
@@ -195,11 +169,12 @@ test('client allows message with only `cc` recipient header', async (t) => {
 		text: "It is hard to be brave when you're only a Very Small Animal.",
 	};
 
-	const mail = await send(msg);
-	t.is(mail.text, msg.text + '\n\n\n');
-	t.is(mail.subject, msg.subject);
-	t.is(mail.from?.text, msg.from);
-	t.is((mail.cc as AddressObject).text, msg.cc);
+	const message = await client.sendAsync(msg);
+	t.is(message.text, msg.text);
+	t.is(message.header.from, msg.from);
+	t.is(message.header.to, undefined);
+	t.is(message.header.cc, msg.cc);
+	t.is(message.header.bcc, undefined);
 });
 
 test('client allows message with only `bcc` recipient header', async (t) => {
@@ -210,11 +185,12 @@ test('client allows message with only `bcc` recipient header', async (t) => {
 		text: "It is hard to be brave when you're only a Very Small Animal.",
 	};
 
-	const mail = await send(msg);
-	t.is(mail.text, msg.text + '\n\n\n');
-	t.is(mail.subject, msg.subject);
-	t.is(mail.from?.text, msg.from);
-	t.is(mail.bcc, undefined);
+	const message = await client.sendAsync(msg);
+	t.is(message.text, msg.text);
+	t.is(message.header.from, msg.from);
+	t.is(message.header.to, undefined);
+	t.is(message.header.cc, undefined);
+	t.is(message.header.bcc, msg.bcc);
 });
 
 test('client constructor throws if `password` supplied without `user`', async (t) => {
