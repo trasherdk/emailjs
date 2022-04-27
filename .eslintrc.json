@@ -9,12 +9,6 @@
 		"plugin:@typescript-eslint/recommended"
 	],
 	"rules": {
-		"@typescript-eslint/no-explicit-any": [
-			"error",
-			{
-				"ignoreRestArgs": true
-			}
-		],
 		"curly": [
 			"error",
 			"all"
