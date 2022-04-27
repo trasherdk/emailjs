@@ -54,17 +54,7 @@ export class SMTPClient {
 		msg: T,
 		callback: MessageCallback<T>
 	): void {
-		const message =
-			msg instanceof Message
-				? msg
-				: this._canMakeMessage(msg)
-				? new Message(msg)
-				: null;
-
-		if (message == null) {
-			callback(new Error('message is not a valid Message instance'), msg);
-			return;
-		}
+		const message = msg instanceof Message ? msg : new Message(msg);
 
 		const { isValid, validationError } = message.checkValidity();
 
@@ -220,19 +210,6 @@ export class SMTPClient {
 
 		this.ready = false;
 		this.smtp.connect(connect);
-	}
-
-	/**
-	 * @protected
-	 * @param {MessageStack} msg message stack
-	 * @returns {boolean} can make message
-	 */
-	protected _canMakeMessage(msg: MessageHeaders) {
-		return (
-			msg.from &&
-			(msg.to || msg.cc || msg.bcc) &&
-			(msg.text !== undefined || this._containsInlinedHtml(msg.attachment))
-		);
 	}
 
 	/**

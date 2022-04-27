@@ -137,7 +137,7 @@ export class Message {
 	 * @see https://tools.ietf.org/html/rfc2822
 	 * @param {Partial<MessageHeaders>} headers Message headers
 	 */
-	constructor(headers: Partial<MessageHeaders>) {
+	constructor(headers: Partial<MessageHeaders> = {}) {
 		for (const header in headers) {
 			// allow user to override default content-type to override charset or send a single non-text message
 			if (/^content-type$/i.test(header)) {
