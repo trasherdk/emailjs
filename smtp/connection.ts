@@ -40,10 +40,10 @@ const GREYLIST_DELAY = 300 as const;
 let DEBUG: 0 | 1 = 0;
 
 /**
- * @param {...any[]} args the message(s) to log
+ * @param {...unknown[]} args the message(s) to log
  * @returns {void}
  */
-const log = (...args: any[]) => {
+const log = (...args: unknown[]) => {
 	if (DEBUG === 1) {
 		args.forEach((d) =>
 			console.log(
@@ -81,7 +81,7 @@ export interface SMTPConnectionOptions {
 	ssl: boolean | SMTPSocketOptions;
 	tls: boolean | SMTPSocketOptions;
 	authentication: (keyof typeof AUTH_METHODS)[];
-	logger: (...args: any[]) => void;
+	logger: (...args: unknown[]) => void;
 }
 
 export interface ConnectOptions {
