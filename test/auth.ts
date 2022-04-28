@@ -1,34 +1,20 @@
 import test from 'ava';
-import type { ExecutionContext } from 'ava';
-import { simpleParser } from 'mailparser';
-import type { AddressObject } from 'mailparser';
 import { SMTPServer } from 'smtp-server';
 
-import { AUTH_METHODS, SMTPClient, Message } from '../email.js';
+import { AUTH_METHODS, SMTPConnection } from '../email.js';
 
 let port = 2000;
 
-function send(
-	t: ExecutionContext,
-	{
-		authMethods = [],
-		authOptional = false,
-		secure = false,
-	}: {
-		authMethods?: (keyof typeof AUTH_METHODS)[];
-		authOptional?: boolean;
-		secure?: boolean;
-	} = {}
-) {
+function connect({
+	authMethods = [],
+	authOptional = false,
+	secure = false,
+}: {
+	authMethods?: (keyof typeof AUTH_METHODS)[];
+	authOptional?: boolean;
+	secure?: boolean;
+} = {}) {
 	return new Promise<void>((resolve, reject) => {
-		t.plan(5);
-
-		const msg = {
-			subject: 'this is a test TEXT message from emailjs',
-			from: 'piglet@gmail.com',
-			to: 'pooh@gmail.com',
-			text: "It is hard to be brave when you're only a Very Small Animal.",
-		};
 		const server = new SMTPServer({
 			authMethods,
 			secure: secure,
@@ -49,20 +35,6 @@ function send(
 					return callback(new Error('invalid user / pass'));
 				}
 			},
-			async onData(stream, _session, callback: () => void) {
-				const mail = await simpleParser(stream, {
-					skipHtmlToText: true,
-					skipTextToHtml: true,
-					skipImageLinks: true,
-				} as Record<string, unknown>);
-
-				t.is(mail.text, msg.text + '\n\n\n');
-				t.is(mail.subject, msg.subject);
-				t.is(mail.from?.text, msg.from);
-				t.is((mail.to as AddressObject).text, msg.to);
-
-				callback();
-			},
 		});
 		const p = port++;
 		server.listen(p, () => {
@@ -70,7 +42,7 @@ function send(
 				{ port: p, ssl: secure, authentication: authMethods },
 				authOptional ? {} : { user: 'pooh', password: 'honey' }
 			);
-			new SMTPClient(options).send(new Message(msg), (err) => {
+			new SMTPConnection(options).connect((err) => {
 				server.close(() => {
 					if (err) {
 						reject(err.message);
@@ -84,39 +56,39 @@ function send(
 }
 
 test('no authentication (unencrypted) should succeed', async (t) => {
-	await t.notThrowsAsync(send(t, { authOptional: true }));
+	await t.notThrowsAsync(connect({ authOptional: true }));
 });
 
 test('no authentication (encrypted) should succeed', async (t) => {
-	await t.notThrowsAsync(send(t, { authOptional: true, secure: true }));
+	await t.notThrowsAsync(connect({ authOptional: true, secure: true }));
 });
 
 test('PLAIN authentication (unencrypted) should succeed', async (t) => {
-	await t.notThrowsAsync(send(t, { authMethods: [AUTH_METHODS.PLAIN] }));
+	await t.notThrowsAsync(connect({ authMethods: [AUTH_METHODS.PLAIN] }));
 });
 
 test('PLAIN authentication (encrypted) should succeed', async (t) => {
 	await t.notThrowsAsync(
-		send(t, { authMethods: [AUTH_METHODS.PLAIN], secure: true })
+		connect({ authMethods: [AUTH_METHODS.PLAIN], secure: true })
 	);
 });
 
 test('LOGIN authentication (unencrypted) should succeed', async (t) => {
-	await t.notThrowsAsync(send(t, { authMethods: [AUTH_METHODS.LOGIN] }));
+	await t.notThrowsAsync(connect({ authMethods: [AUTH_METHODS.LOGIN] }));
 });
 
 test('LOGIN authentication (encrypted) should succeed', async (t) => {
 	await t.notThrowsAsync(
-		send(t, { authMethods: [AUTH_METHODS.LOGIN], secure: true })
+		connect({ authMethods: [AUTH_METHODS.LOGIN], secure: true })
 	);
 });
 
 test('XOAUTH2 authentication (unencrypted) should succeed', async (t) => {
-	await t.notThrowsAsync(send(t, { authMethods: [AUTH_METHODS.XOAUTH2] }));
+	await t.notThrowsAsync(connect({ authMethods: [AUTH_METHODS.XOAUTH2] }));
 });
 
 test('XOAUTH2 authentication (encrypted) should succeed', async (t) => {
 	await t.notThrowsAsync(
-		send(t, { authMethods: [AUTH_METHODS.XOAUTH2], secure: true })
+		connect({ authMethods: [AUTH_METHODS.XOAUTH2], secure: true })
 	);
 });
