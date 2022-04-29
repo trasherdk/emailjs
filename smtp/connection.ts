@@ -196,7 +196,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @returns {SMTPState} the current state
+	 * @returns {0 | 1 | 2} the current state
 	 */
 	public state() {
 		return this._state;
