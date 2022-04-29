@@ -671,7 +671,6 @@ export class SMTPConnection extends EventEmitter {
 		callback: SMTPCommandCallback,
 		domain?: string
 	) {
-		// is this code callable...?
 		if (!this.features) {
 			this.ehlo((err, data) => {
 				if (err) {
