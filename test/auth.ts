@@ -18,8 +18,6 @@ function connect({
 		const server = new SMTPServer({
 			authMethods,
 			secure: secure,
-			hideSTARTTLS: !secure,
-			authOptional,
 			onAuth(auth, _session, callback) {
 				const { accessToken, method, username, password } = auth;
 				if (
@@ -39,8 +37,13 @@ function connect({
 		const p = port++;
 		server.listen(p, () => {
 			const options = Object.assign(
-				{ port: p, ssl: secure, authentication: authMethods },
-				authOptional ? {} : { user: 'pooh', password: 'honey' }
+				{
+					port: p,
+					authentication: authMethods,
+				},
+				authOptional
+					? { ssl: secure }
+					: { ssl: secure, user: 'pooh', password: 'honey' }
 			);
 			new SMTPConnection(options).connect((err) => {
 				server.close(() => {
