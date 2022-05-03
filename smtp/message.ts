@@ -249,17 +249,6 @@ export class Message {
 
 	/**
 	 * @public
-	 * @deprecated does not conform to the `errback` style followed by the rest of the library, and will be removed in the next major version. use `checkValidity` instead.
-	 * @param {function(isValid: boolean, invalidReason: (string | undefined)): void} callback .
-	 * @returns {void}
-	 */
-	public valid(callback: (isValid: boolean, invalidReason?: string) => void) {
-		const { isValid, validationError } = this.checkValidity();
-		callback(isValid, validationError);
-	}
-
-	/**
-	 * @public
 	 * @returns {MessageStream} a stream of the current message
 	 */
 	public stream() {
