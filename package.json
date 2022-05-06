@@ -15,7 +15,7 @@
 		"url": "http://github.com/eleith/emailjs.git"
 	},
 	"type": "module",
-	"packageManager": "yarn@1.22.15",
+	"packageManager": "yarn@1.22.18",
 	"devDependencies": {
 		"@ledge/configs": "23.3.23322",
 		"@rollup/plugin-typescript": "8.3.2",
