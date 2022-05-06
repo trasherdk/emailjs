@@ -7,6 +7,6 @@ export default {
 	},
 	files: ['test/*.ts'],
 	nodeArguments: ['--loader=ts-node/esm'],
-	// makes tests far slower
+	// crashes v8 entirely
 	workerThreads: false,
 };

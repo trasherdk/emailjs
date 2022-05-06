@@ -1,7 +1,9 @@
 import { createReadStream, readFileSync } from 'fs';
+import { performance } from 'perf_hooks';
 import { URL } from 'url';
 
 import test from 'ava';
+import type { ExecutionContext, LogFn } from 'ava';
 import { simpleParser } from 'mailparser';
 import type { AddressObject, ParsedMail } from 'mailparser';
 import { SMTPServer } from 'smtp-server';
@@ -25,20 +27,15 @@ const tarFixtureUrl = new URL(
 const tarFixture = readFileSync(tarFixtureUrl, 'base64');
 
 /**
- * \@types/mailparser@3.0.2 breaks our code
+ * \@types/mailparser\@3.0.2 breaks our code
  * @see https://github.com/DefinitelyTyped/DefinitelyTyped/pull/50744
  */
 type ParsedMailCompat = Omit<ParsedMail, 'to'> & { to?: AddressObject };
 
 const port = 5555;
-const parseMap = new Map<string, ParsedMailCompat>();
 
-const client = new SMTPClient({
-	port,
-	user: 'pooh',
-	password: 'honey',
-	ssl: true,
-});
+const parseMap = new Map<string, ParsedMailCompat>();
+const logFnMap = new Map<string, LogFn>();
 const server = new SMTPServer({
 	secure: true,
 	onAuth(auth, _session, callback) {
@@ -48,49 +45,57 @@ const server = new SMTPServer({
 			return callback(new Error('invalid user / pass'));
 		}
 	},
-	async onData(stream, _session, callback: () => void) {
+	async onData(stream, _session, callback) {
+		const now = performance.now();
 		const mail = (await simpleParser(stream, {
 			skipHtmlToText: true,
 			skipTextToHtml: true,
 			skipImageLinks: true,
-		} as Record<string, unknown>)) as ParsedMailCompat;
-
-		parseMap.set(mail.subject as string, mail);
+		})) as ParsedMailCompat;
+		const { subject = '' } = mail;
+		(logFnMap.get(subject) as LogFn)(
+			`Time to parse message: ${Math.round(performance.now() - now)}ms`
+		);
+		parseMap.set(subject, mail);
 		callback();
 	},
 });
 
-function send(headers: Partial<MessageHeaders>) {
+test.before((t) => server.listen(port, t.pass));
+test.after((t) => server.close(t.pass));
+
+function send(t: ExecutionContext, headers: Partial<MessageHeaders>) {
 	return new Promise<ParsedMailCompat>((resolve, reject) => {
+		const { subject = '' } = headers;
+		logFnMap.set(subject, t.log);
+		const client = new SMTPClient({
+			port,
+			user: 'pooh',
+			password: 'honey',
+			ssl: true,
+		});
 		client.send(new Message(headers), (err) => {
 			if (err) {
 				reject(err);
 			} else {
-				resolve(parseMap.get(headers.subject as string) as ParsedMailCompat);
+				resolve(parseMap.get(subject) as ParsedMailCompat);
 			}
 		});
 	});
 }
 
-test.before(async (t) => {
-	server.listen(port, t.pass);
-});
-test.after(async (t) => {
-	server.close(t.pass);
-});
-
 test('simple text message', async (t) => {
 	const msg = {
-		subject: 'this is a test TEXT message from emailjs',
+		subject: t.title,
 		from: 'zelda@gmail.com',
 		to: 'gannon@gmail.com',
 		cc: 'gannon@gmail.com',
 		bcc: 'gannon@gmail.com',
 		text: 'hello friend, i hope this message finds you well.',
-		'message-id': 'this is a special id',
+		'message-id': 'special id',
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.text, msg.text + '\n\n\n');
 	t.is(mail.subject, msg.subject);
 	t.is(mail.from?.text, msg.from);
@@ -100,39 +105,39 @@ test('simple text message', async (t) => {
 
 test('null text message', async (t) => {
 	const msg = {
-		subject: 'this is a test TEXT message from emailjs',
+		subject: t.title,
 		from: 'zelda@gmail.com',
 		to: 'gannon@gmail.com',
 		text: null,
-		'message-id': 'this is a special id',
+		'message-id': 'special id',
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.text, '\n\n\n');
 });
 
 test('empty text message', async (t) => {
 	const msg = {
-		subject: 'this is a test TEXT message from emailjs',
+		subject: t.title,
 		from: 'zelda@gmail.com',
 		to: 'gannon@gmail.com',
 		text: '',
-		'message-id': 'this is a special id',
+		'message-id': 'special id',
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.text, '\n\n\n');
 });
 
-test('simple unicode text message', async (t) => {
+test('simple ✓ unicode ✓ text message', async (t) => {
 	const msg = {
-		subject: 'this ✓ is a test ✓ TEXT message from emailjs',
+		subject: t.title,
 		from: 'zelda✓ <zelda@gmail.com>',
 		to: 'gannon✓ <gannon@gmail.com>',
 		text: 'hello ✓ friend, i hope this message finds you well.',
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.text, msg.text + '\n\n\n');
 	t.is(mail.subject, msg.subject);
 	t.is(mail.from?.text, msg.from);
@@ -142,24 +147,24 @@ test('simple unicode text message', async (t) => {
 test('very large text message', async (t) => {
 	// thanks to jart+loberstech for this one!
 	const msg = {
-		subject: 'this is a test TEXT message from emailjs',
+		subject: t.title,
 		from: 'ninjas@gmail.com',
 		to: 'pirates@gmail.com',
 		text: textFixture,
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.text, msg.text.replace(/\r/g, '') + '\n\n\n');
 	t.is(mail.subject, msg.subject);
 	t.is(mail.from?.text, msg.from);
 	t.is(mail.to?.text, msg.to);
 });
 
-test('very large text data message', async (t) => {
+test('very large text + data message', async (t) => {
 	const text = '<html><body><pre>' + textFixture + '</pre></body></html>';
 
 	const msg = {
-		subject: 'this is a test TEXT+DATA message from emailjs',
+		subject: t.title,
 		from: 'lobsters@gmail.com',
 		to: 'lizards@gmail.com',
 		text: 'hello friend if you are seeing this, you can not view html emails. it is attached inline.',
@@ -169,7 +174,7 @@ test('very large text data message', async (t) => {
 		},
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.html, text.replace(/\r/g, ''));
 	t.is(mail.text, msg.text + '\n');
 	t.is(mail.subject, msg.subject);
@@ -177,9 +182,9 @@ test('very large text data message', async (t) => {
 	t.is(mail.to?.text, msg.to);
 });
 
-test('html data message', async (t) => {
+test('text + html + data message', async (t) => {
 	const msg = {
-		subject: 'this is a test TEXT+HTML+DATA message from emailjs',
+		subject: t.title,
 		from: 'obama@gmail.com',
 		to: 'mitt@gmail.com',
 		attachment: {
@@ -188,7 +193,7 @@ test('html data message', async (t) => {
 		},
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.html, htmlFixture.replace(/\r/g, ''));
 	t.is(mail.text, '\n');
 	t.is(mail.subject, msg.subject);
@@ -198,7 +203,7 @@ test('html data message', async (t) => {
 
 test('html file message', async (t) => {
 	const msg = {
-		subject: 'this is a test TEXT+HTML+FILE message from emailjs',
+		subject: t.title,
 		from: 'thomas@gmail.com',
 		to: 'nikolas@gmail.com',
 		attachment: {
@@ -207,7 +212,7 @@ test('html file message', async (t) => {
 		},
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.html, htmlFixture.replace(/\r/g, ''));
 	t.is(mail.text, '\n');
 	t.is(mail.subject, msg.subject);
@@ -215,11 +220,11 @@ test('html file message', async (t) => {
 	t.is(mail.to?.text, msg.to);
 });
 
-test('html with image embed message', async (t) => {
+test('html + image embed message', async (t) => {
 	const htmlFixture2Url = new URL('attachments/smtp2.html', import.meta.url);
 	const imageFixtureUrl = new URL('attachments/smtp.gif', import.meta.url);
 	const msg = {
-		subject: 'this is a test TEXT+HTML+IMAGE message from emailjs',
+		subject: t.title,
 		from: 'ninja@gmail.com',
 		to: 'pirate@gmail.com',
 		attachment: {
@@ -236,7 +241,7 @@ test('html with image embed message', async (t) => {
 		},
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(
 		mail.attachments[0].content.toString('base64'),
 		readFileSync(imageFixtureUrl, 'base64')
@@ -248,9 +253,9 @@ test('html with image embed message', async (t) => {
 	t.is(mail.to?.text, msg.to);
 });
 
-test('html data and attachment message', async (t) => {
+test('html + data + two attachments message', async (t) => {
 	const msg = {
-		subject: 'this is a test TEXT+HTML+FILE message from emailjs',
+		subject: t.title,
 		from: 'thomas@gmail.com',
 		to: 'nikolas@gmail.com',
 		attachment: [
@@ -262,7 +267,7 @@ test('html data and attachment message', async (t) => {
 		] as MessageAttachment[],
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.html, htmlFixture.replace(/\r/g, ''));
 	t.is(mail.text, '\n');
 	t.is(mail.subject, msg.subject);
@@ -270,9 +275,9 @@ test('html data and attachment message', async (t) => {
 	t.is(mail.to?.text, msg.to);
 });
 
-test('attachment message', async (t) => {
+test('text + attachment message', async (t) => {
 	const msg = {
-		subject: 'this is a test TEXT+ATTACHMENT message from emailjs',
+		subject: t.title,
 		from: 'washing@gmail.com',
 		to: 'lincoln@gmail.com',
 		text: 'hello friend, i hope this message and pdf finds you well.',
@@ -283,7 +288,7 @@ test('attachment message', async (t) => {
 		} as MessageAttachment,
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.attachments[0].content.toString('base64'), pdfFixture);
 	t.is(mail.text, msg.text + '\n');
 	t.is(mail.subject, msg.subject);
@@ -291,9 +296,9 @@ test('attachment message', async (t) => {
 	t.is(mail.to?.text, msg.to);
 });
 
-test('attachment sent with unicode filename message', async (t) => {
+test('text + attachment + unicode filename message', async (t) => {
 	const msg = {
-		subject: 'this is a test TEXT+ATTACHMENT message from emailjs',
+		subject: t.title,
 		from: 'washing@gmail.com',
 		to: 'lincoln@gmail.com',
 		text: 'hello friend, i hope this message and pdf finds you well.',
@@ -304,7 +309,7 @@ test('attachment sent with unicode filename message', async (t) => {
 		} as MessageAttachment,
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.attachments[0].content.toString('base64'), pdfFixture);
 	t.is(mail.attachments[0].filename, 'smtp-✓-info.pdf');
 	t.is(mail.text, msg.text + '\n');
@@ -313,9 +318,9 @@ test('attachment sent with unicode filename message', async (t) => {
 	t.is(mail.to?.text, msg.to);
 });
 
-test('attachments message', async (t) => {
+test('text + two attachments message', async (t) => {
 	const msg = {
-		subject: 'this is a test TEXT+2+ATTACHMENTS message from emailjs',
+		subject: t.title,
 		from: 'sergey@gmail.com',
 		to: 'jobs@gmail.com',
 		text: 'hello friend, i hope this message and attachments finds you well.',
@@ -333,7 +338,7 @@ test('attachments message', async (t) => {
 		] as MessageAttachment[],
 	};
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.attachments[0].content.toString('base64'), pdfFixture);
 	t.is(mail.attachments[1].content.toString('base64'), tarFixture);
 	t.is(mail.text, msg.text + '\n');
@@ -342,9 +347,9 @@ test('attachments message', async (t) => {
 	t.is(mail.to?.text, msg.to);
 });
 
-test('streams message', async (t) => {
+test('text + two attachments message (streams)', async (t) => {
 	const msg = {
-		subject: 'this is a test TEXT+2+STREAMED+ATTACHMENTS message from emailjs',
+		subject: t.title,
 		from: 'stanford@gmail.com',
 		to: 'mit@gmail.com',
 		text: 'hello friend, i hope this message and streamed attachments finds you well.',
@@ -366,7 +371,7 @@ test('streams message', async (t) => {
 		stream.pause();
 	}
 
-	const mail = await send(msg);
+	const mail = await send(t, msg);
 	t.is(mail.attachments[0].content.toString('base64'), pdfFixture);
 	t.is(mail.attachments[1].content.toString('base64'), tarFixture);
 	t.is(mail.text, msg.text + '\n');
