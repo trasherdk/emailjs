@@ -1,7 +1,7 @@
 import { promisify } from 'util';
 
 import test from 'ava';
-import { SMTPServer } from 'smtp-server';
+import { SMTPServer, SMTPServerOptions } from 'smtp-server';
 
 import {
 	DEFAULT_TIMEOUT,
@@ -13,22 +13,11 @@ import {
 const port = 3333;
 let greylistPort = 4444;
 
-const client = new SMTPClient({
-	port,
-	user: 'pooh',
-	password: 'honey',
-	ssl: true,
-});
+const client = new SMTPClient({ port });
 const server = new SMTPServer({
-	secure: true,
-	onAuth(auth, _session, callback) {
-		if (auth.username === 'pooh' && auth.password === 'honey') {
-			callback(null, { user: 'pooh' });
-		} else {
-			return callback(new Error('invalid user / pass'));
-		}
-	},
-});
+	authOptional: true,
+	maxAllowedUnauthenticatedCommands: Infinity,
+} as unknown as SMTPServerOptions);
 
 test.before(async (t) => {
 	server.listen(port, t.pass);
