@@ -3,8 +3,9 @@
 send emails, html and attachments (files, streams and strings) from node.js to any smtp server
 
 ## INSTALLING
-
-    npm install emailjs
+```console
+$ npm install emailjs # or yarn, pnpm, etc.
+```
 
 ## FEATURES
 
@@ -21,6 +22,29 @@ send emails, html and attachments (files, streams and strings) from node.js to a
 
 - auth access to an SMTP Server
 - if your service (ex: gmail) uses two-step authentication, use an application specific password
+
+## DEVELOPMENT
+
+issues and pull requests are welcome!
+
+### Setup
+#### node 14+
+```console
+$ corepack enable yarn # if necessary to install or update
+$ yarn
+```
+
+#### node 12
+```console
+$ npm install --global yarn # if necessary to install or update; see https://classic.yarnpkg.com/en/docs/install
+$ yarn
+```
+
+### Testing
+```console
+$ yarn test
+```
+
 
 ## EXAMPLE USAGE - text only emails
 
@@ -309,12 +333,3 @@ associative array of currently supported SMTP authentication mechanisms
 
 eleith
 zackschuster
-
-## Testing
-
-    npm install -d
-    npm test
-
-## Contributions
-
-issues and pull requests are welcome
