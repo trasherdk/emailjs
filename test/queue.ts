@@ -1,11 +1,14 @@
+import { performance } from 'perf_hooks';
+
 import test from 'ava';
 import { SMTPServer } from 'smtp-server';
+
 import { SMTPClient, Message } from '../email.js';
 
 const port = 7777;
 
 test('synchronous queue failures are handled gracefully by client', async (t) => {
-	const tlsClient = new SMTPClient({ port, timeout: 100, tls: true });
+	const tlsClient = new SMTPClient({ port, timeout: 200, tls: true });
 	const secureServer = new SMTPServer({ secure: true });
 
 	let attemptCount = 0;
@@ -47,18 +50,35 @@ test('synchronous queue failures are handled gracefully by client', async (t) =>
 					};
 					void mailQueue.push(mailTask);
 					for (const task of mailQueueGenerator()) {
+						const now = performance.now();
+						const initialAttemptCount = attemptCount++;
 						try {
-							attemptCount++;
-							t.log(`Attempting to execute task #${attemptCount}...`);
+							t.log(
+								`Attempting task #${attemptCount}...${
+									attemptCount > 1
+										? ` (succeeded: ${
+												initialAttemptCount - failureCount
+										  } / ${initialAttemptCount})`
+										: ''
+								}`
+							);
 							await task?.();
-							t.log(`Attempt #${attemptCount} succeeded.`);
+							t.log(
+								`Task succeeded (${Math.round(performance.now() - now)}ms).`
+							);
 						} catch (err) {
 							failureCount++;
-							t.log(`Attempt #${attemptCount} failed: ${err.message}`);
+							t.log(
+								`Task failed: ${err.message} (${Math.round(
+									performance.now() - now
+								)}ms)`
+							);
 						}
 					}
 					t.log(
-						`Finished after ${attemptCount} attempts with ${failureCount} failures.`
+						`Finished after ${attemptCount} attempts (succeeded: ${
+							attemptCount - failureCount
+						} / ${attemptCount}).`
 					);
 				});
 		})
