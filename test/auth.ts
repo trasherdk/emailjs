@@ -46,13 +46,12 @@ function connect({
 					: { ssl: secure, user: 'pooh', password: 'honey' }
 			);
 			new SMTPConnection(options).connect((err) => {
-				server.close(() => {
-					if (err) {
-						reject(err.message);
-					} else {
-						resolve();
-					}
-				});
+				server.close();
+				if (err) {
+					reject(err.message);
+				} else {
+					resolve();
+				}
 			});
 		});
 	});
