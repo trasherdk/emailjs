@@ -9,8 +9,8 @@ import { SMTPError, SMTPErrorStates } from './error.js';
 import { SMTPResponseMonitor } from './response.js';
 
 /**
- * @readonly
- * @enum
+ * @constant
+ * @enum {string}
  */
 export const AUTH_METHODS = {
 	PLAIN: 'PLAIN',
@@ -20,8 +20,8 @@ export const AUTH_METHODS = {
 } as const;
 
 /**
- * @readonly
- * @enum
+ * @constant
+ * @enum {number}
  */
 export const SMTPState = {
 	NOTCONNECTED: 0,
@@ -122,6 +122,8 @@ export class SMTPConnection extends EventEmitter {
 	 * To target a Message Transfer Agent (MTA), omit all options.
 	 *
 	 * NOTE: `host` is trimmed before being used to establish a connection; however, the original untrimmed value will still be visible in configuration.
+	 *
+	 * @param {Partial<SMTPConnectionOptions>} options options
 	 */
 	constructor({
 		timeout,
@@ -443,7 +445,7 @@ export class SMTPConnection extends EventEmitter {
 	 * @see https://tools.ietf.org/html/rfc2821#appendix-F.3
 	 *
 	 * @param {SMTPCommandCallback} callback function to call after response
-	 * @param {string} domain the domain to associate with the 'helo' request
+	 * @param {string} [domain] the domain to associate with the 'helo' request
 	 * @returns {void}
 	 */
 	public helo(callback: SMTPCommandCallback, domain?: string) {
@@ -528,7 +530,7 @@ export class SMTPConnection extends EventEmitter {
 	/**
 	 * @public
 	 * @param {SMTPCommandCallback} callback function to call after response
-	 * @param {string} domain the domain to associate with the 'ehlo' request
+	 * @param {string} [domain] the domain to associate with the 'ehlo' request
 	 * @returns {void}
 	 */
 	public ehlo(callback: SMTPCommandCallback, domain?: string) {
@@ -695,7 +697,9 @@ export class SMTPConnection extends EventEmitter {
 	 * @param {SMTPCommandCallback} callback function to call after response
 	 * @param {string} [user] the username to authenticate with
 	 * @param {string} [password] the password for the authentication
-	 * @param {{ method: string, domain: string }} [options] login options
+	 * @param {Object} [options] login options
+	 * @param {string} [options.method] login method
+	 * @param {string} [options.domain] login domain
 	 * @returns {void}
 	 */
 	public login(
@@ -755,7 +759,10 @@ export class SMTPConnection extends EventEmitter {
 				const preferred = this.authentication;
 				let auth = '';
 
-				if (typeof this.features?.['auth'] === 'string') {
+				if (
+					this.features != null &&
+					typeof this.features['auth'] === 'string'
+				) {
 					auth = this.features['auth'];
 				}
 

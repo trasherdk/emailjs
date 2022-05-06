@@ -1,6 +1,6 @@
 /**
- * @readonly
- * @enum
+ * @constant
+ * @enum {number}
  */
 export const SMTPErrorStates = {
 	COULDNOTCONNECT: 1,
@@ -32,8 +32,8 @@ export class SMTPError extends Error {
 	 *
 	 * @param {string} message error message
 	 * @param {number} code smtp error state
-	 * @param {Error | null} error previous error
-	 * @param {unknown} smtp arbitrary data
+	 * @param {Error | null} [error] previous error
+	 * @param {unknown} [smtp] arbitrary data
 	 * @returns {SMTPError} error
 	 */
 	public static create(
@@ -42,7 +42,8 @@ export class SMTPError extends Error {
 		error?: Error | null,
 		smtp?: unknown
 	) {
-		const msg = error?.message ? `${message} (${error.message})` : message;
+		const { message: errorMsg } = error ?? { message: undefined };
+		const msg = errorMsg ? `${message} (${errorMsg})` : message;
 		const err = new SMTPError(msg);
 
 		err.code = code;

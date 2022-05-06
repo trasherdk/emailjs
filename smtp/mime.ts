@@ -120,7 +120,7 @@ function splitMimeEncodedString(str: string, maxlen = 12) {
  */
 function checkRanges(nr: number) {
 	return RANGES.reduce(
-		(val, range) =>
+		(/** @type {boolean} */ val, range) =>
 			val ||
 			(range.length === 1 && nr === range[0]) ||
 			(range.length === 2 && nr >= range[0] && nr <= range[1]),

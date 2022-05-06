@@ -94,7 +94,7 @@ export class SMTPClient {
 	 * @public
 	 * @description Converts a message to the raw object used by the internal stack.
 	 * @param {Message} message message to convert
-	 * @param {MessageCallback} callback errback
+	 * @param {MessageCallback<Message>} callback errback
 	 * @returns {MessageStack} raw message object
 	 */
 	public createMessageStack(
@@ -322,7 +322,7 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {Error} err err
+	 * @param {Error | null} err err
 	 * @param {MessageStack} stack stack
 	 * @returns {void}
 	 */

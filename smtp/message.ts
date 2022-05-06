@@ -294,9 +294,7 @@ class MessageStream extends Stream {
 		super();
 
 		/**
-		 * @param {string} [data] the data to output
-		 * @param {Function} [callback] the function
-		 * @param {any[]} [args] array of arguments to pass to the callback
+		 * @param {string} data the data to output
 		 * @returns {void}
 		 */
 		const output = (data: string) => {
@@ -348,7 +346,7 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {MessageAttachment} [attachment] the attachment whose headers you would like to output
+		 * @param {MessageAttachment} attachment the attachment whose headers you would like to output
 		 * @returns {void}
 		 */
 		const outputAttachmentHeaders = (attachment: MessageAttachment) => {
@@ -419,7 +417,7 @@ class MessageStream extends Stream {
 					: inputEncoding;
 
 			/**
-			 * @param {Error} err the error to emit
+			 * @param {NodeJS.ErrnoException | null} err the error to emit
 			 * @param {number} fd the file descriptor
 			 * @returns {void}
 			 */
@@ -561,7 +559,7 @@ class MessageStream extends Stream {
 				outputMessage(boundary, this.message.attachments, 0, close);
 			} else {
 				outputAlternative(
-					// typescript bug; should narrow to { alternative: MessageAttachment }
+					// typescript bug; should narrow to Message & { alternative: MessageAttachment }
 					this.message as Parameters<typeof outputAlternative>[0],
 					() => outputMessage(boundary, this.message.attachments, 0, close)
 				);
@@ -650,10 +648,11 @@ class MessageStream extends Stream {
 				callback();
 			};
 
-			if (message.alternative.related) {
-				outputRelated(message.alternative, finish);
+			const { alternative } = message;
+			if (alternative.related) {
+				outputRelated(alternative, finish);
 			} else {
-				outputAttachment(message.alternative, finish);
+				outputAttachment(alternative, finish);
 			}
 		};
 
