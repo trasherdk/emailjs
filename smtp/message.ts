@@ -20,18 +20,21 @@ const CRLF = '\r\n' as const;
 
 /**
  * MIME standard wants 76 char chunks when sending out.
+ * @type {76}
  */
 export const MIMECHUNK = 76 as const;
 
 /**
  * meets both base64 and mime divisibility
+ * @type {456}
  */
-export const MIME64CHUNK = (MIMECHUNK * 6) as 456;
+export const MIME64CHUNK = 456 as const; // MIMECHUNK * 6
 
 /**
  * size of the message stream buffer
+ * @type {12768}
  */
-export const BUFFERSIZE = (MIMECHUNK * 24 * 7) as 12768;
+export const BUFFERSIZE = 12768 as const; // MIMECHUNK * 24 * 7;
 
 export interface MessageAttachmentHeaders {
 	[index: string]: string | undefined;
