@@ -15,13 +15,9 @@ export type MessageCallback<T = Message | MessageHeaders> = <
 export interface MessageStack {
 	callback: MessageCallback;
 	message: Message;
-	attachment: MessageAttachment;
-	text: string;
-	returnPath: string;
+	returnPath?: string;
 	from: string;
 	to: ReturnType<typeof addressparser>;
-	cc: string[];
-	bcc: string[];
 }
 
 export class SMTPClient {
@@ -103,13 +99,13 @@ export class SMTPClient {
 			/* ø */
 		}
 	) {
-		const [{ address: from }] = addressparser(message.header.from);
-		const stack = {
+		const [{ address: from = '' }] = addressparser(message.header.from);
+		const stack: MessageStack = {
 			message,
-			to: [] as ReturnType<typeof addressparser>,
+			to: [],
 			from,
 			callback: callback.bind(this),
-		} as MessageStack;
+		};
 
 		const {
 			header: { to, cc, bcc, 'return-path': returnPath },
@@ -139,7 +135,7 @@ export class SMTPClient {
 			const parsedReturnPath = addressparser(returnPath);
 			if (parsedReturnPath.length > 0) {
 				const [{ address: returnPathAddress }] = parsedReturnPath;
-				stack.returnPath = returnPathAddress as string;
+				stack.returnPath = returnPathAddress;
 			}
 		}
 
