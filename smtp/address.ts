@@ -9,7 +9,7 @@ export interface AddressObject {
 	group?: AddressObject[];
 }
 
-/*
+/**
  * Operator tokens and which tokens are expected to end the sequence
  */
 const OPERATORS = new Map([
@@ -32,7 +32,7 @@ const OPERATORS = new Map([
  * Tokenizes the original input string
  *
  * @param {string | string[] | undefined} address string(s) to tokenize
- * @return {AddressToken[]} An array of operator|text tokens
+ * @return {AddressToken[]} An array of operator & text tokens
  */
 function tokenizeAddress(address: string | string[] = '') {
 	const tokens: AddressToken[] = [];
@@ -69,8 +69,8 @@ function tokenizeAddress(address: string | string[] = '') {
 /**
  * Converts tokens for a single address into an address object
  *
- * @param {AddressToken[]} tokens Tokens object
- * @return {AddressObject[]} addresses object array
+ * @param {AddressToken[]} tokens
+ * @return {AddressObject[]}
  */
 function convertAddressTokens(tokens: AddressToken[]) {
 	const addressObjects: AddressObject[] = [];
@@ -208,8 +208,8 @@ function convertAddressTokens(tokens: AddressToken[]) {
  *
  *     [{name: "Name", address: "address@domain"}]
  *
- * @param {string | string[] | undefined} address Address field
- * @return {AddressObject[]} An array of address objects
+ * @param {string | string[] | undefined} address
+ * @return {AddressObject[]}
  */
 export function addressparser(address?: string | string[]) {
 	const addresses: AddressObject[] = [];

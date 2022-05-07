@@ -135,7 +135,7 @@ export class Message {
 	 * - You can also add whatever other headers you want.
 	 *
 	 * @see https://tools.ietf.org/html/rfc2822
-	 * @param {Partial<MessageHeaders>} headers Message headers
+	 * @param {Partial<MessageHeaders>} headers
 	 */
 	constructor(headers: Partial<MessageHeaders> = {}) {
 		for (const header in headers) {
@@ -175,7 +175,7 @@ export class Message {
 	 * Can be called multiple times, each adding a new attachment.
 	 *
 	 * @public
-	 * @param {MessageAttachment} options attachment options
+	 * @param {MessageAttachment} options
 	 * @returns {Message} the current instance for chaining
 	 */
 	public attach(options: MessageAttachment) {
@@ -257,7 +257,7 @@ export class Message {
 
 	/**
 	 * @public
-	 * @param {function(Error, string): void} callback the function to call with the error and buffer
+	 * @param {function(Error, string): void} callback
 	 * @returns {void}
 	 */
 	public read(callback: (err: Error, buffer: string) => void) {
@@ -270,7 +270,7 @@ export class Message {
 
 	/**
 	 * @public
-	 * @returns {Promise<string>} promise that resolves to the read result
+	 * @returns {Promise<string>}
 	 */
 	public readAsync() {
 		return new Promise<string>((resolve, reject) => {
@@ -293,13 +293,13 @@ class MessageStream extends Stream {
 	readable = true;
 
 	/**
-	 * @param {Message} message the message to stream
+	 * @param {Message} message
 	 */
 	constructor(private message: Message) {
 		super();
 
 		/**
-		 * @param {string} data the data to output
+		 * @param {string} data
 		 * @returns {void}
 		 */
 		const output = (data: string) => {
@@ -351,7 +351,7 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {MessageAttachment} attachment the attachment whose headers you would like to output
+		 * @param {MessageAttachment} attachment
 		 * @returns {void}
 		 */
 		const outputAttachmentHeaders = (attachment: MessageAttachment) => {
@@ -389,8 +389,8 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {string} data the data to output as base64
-		 * @param {function(): void} [callback] the function to call after output is finished
+		 * @param {string} data
+		 * @param {function(): void} [callback]
 		 * @returns {void}
 		 */
 		const outputBase64 = (data: string, callback?: () => void) => {
@@ -406,8 +406,8 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {MessageAttachment} attachment attachment
-		 * @param {function((NodeJS.ErrnoException | null)): void} next next
+		 * @param {MessageAttachment} attachment
+		 * @param {function((NodeJS.ErrnoException | null)): void} next
 		 * @returns {void}
 		 */
 		const outputFile = (
@@ -427,7 +427,7 @@ class MessageStream extends Stream {
 					: inputEncoding;
 
 			/**
-			 * @param {NodeJS.ErrnoException | null} err the error to emit
+			 * @param {NodeJS.ErrnoException | null} err
 			 * @param {number} fd the file descriptor
 			 * @returns {void}
 			 */
@@ -467,8 +467,8 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {MessageAttachment} attachment the metadata to use as headers
-		 * @param {function(): void} callback the function to call after output is finished
+		 * @param {MessageAttachment} attachment
+		 * @param {function(): void} callback
 		 * @returns {void}
 		 */
 		const outputStream = (
@@ -516,8 +516,8 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {MessageAttachment} attachment attachment
-		 * @param {function(): void} callback the function to call
+		 * @param {MessageAttachment} attachment
+		 * @param {function(): void} callback
 		 * @returns {void}
 		 */
 		const outputAttachment = (
@@ -585,8 +585,8 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {MessageAttachment} attachment the metadata to use as headers
-		 * @param {function(): void} callback the function to call after output is finished
+		 * @param {MessageAttachment} attachment
+		 * @param {function(): void} callback
 		 * @returns {void}
 		 */
 		const outputData = (
@@ -602,7 +602,7 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {Message} message the message to output
+		 * @param {Message} message
 		 * @returns {void}
 		 */
 		const outputText = (message: Message) => {
@@ -622,8 +622,8 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {MessageAttachment} message the message to output
-		 * @param {function(): void} callback the function to call after output is finished
+		 * @param {MessageAttachment} message
+		 * @param {function(): void} callback
 		 * @returns {void}
 		 */
 		const outputRelated = (
@@ -643,8 +643,8 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {Message} message the message to output
-		 * @param {function(): void} callback the function to call after output is finished
+		 * @param {Message} message
+		 * @param {function(): void} callback
 		 * @returns {void}
 		 */
 		const outputAlternative = (message: Message, callback: () => void) => {
@@ -678,7 +678,7 @@ class MessageStream extends Stream {
 		};
 
 		/**
-		 * @param {Error} [err] err
+		 * @param {Error} [err]
 		 * @returns {void}
 		 */
 		const close = (err?: Error) => {
@@ -746,7 +746,7 @@ class MessageStream extends Stream {
 
 	/**
 	 * @public
-	 * pause the stream
+	 * @description pause the stream
 	 * @returns {void}
 	 */
 	public pause() {
@@ -756,7 +756,7 @@ class MessageStream extends Stream {
 
 	/**
 	 * @public
-	 * resume the stream
+	 * @description resume the stream
 	 * @returns {void}
 	 */
 	public resume() {
@@ -766,7 +766,7 @@ class MessageStream extends Stream {
 
 	/**
 	 * @public
-	 * destroy the stream
+	 * @description destroy the stream
 	 * @returns {void}
 	 */
 	public destroy() {
@@ -778,7 +778,7 @@ class MessageStream extends Stream {
 
 	/**
 	 * @public
-	 * destroy the stream at first opportunity
+	 * @description destroy the stream at first opportunity
 	 * @returns {void}
 	 */
 	public destroySoon() {

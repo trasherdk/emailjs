@@ -3,9 +3,7 @@ import { TextDecoder, TextEncoder } from 'util';
 
 const encoder = new TextEncoder();
 
-/**
- * @see https://tools.ietf.org/html/rfc2045#section-6.7
- */
+/** @see https://tools.ietf.org/html/rfc2045#section-6.7 */
 const RANGES = [
 	[0x09], // <TAB>
 	[0x0a], // <LF>
@@ -114,8 +112,7 @@ function splitMimeEncodedString(str: string, maxlen = 12) {
 }
 
 /**
- *
- * @param {number} nr number
+ * @param {number} nr
  * @returns {boolean} if number is in range
  */
 function checkRanges(nr: number) {

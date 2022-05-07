@@ -127,7 +127,7 @@ export class SMTPConnection extends EventEmitter {
 	 *
 	 * NOTE: `host` is trimmed before being used to establish a connection; however, the original untrimmed value will still be visible in configuration.
 	 *
-	 * @param {Partial<SMTPConnectionOptions>} options options
+	 * @param {Partial<SMTPConnectionOptions>} options
 	 */
 	constructor({
 		timeout,
@@ -193,7 +193,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {0 | 1} level -
+	 * @param {0 | 1} level
 	 * @returns {void}
 	 */
 	public debug(level: 0 | 1) {
@@ -202,7 +202,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @returns {SMTPState} the current state
+	 * @returns {SMTPState}
 	 */
 	public state() {
 		return this._state;
@@ -210,7 +210,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @returns {boolean} whether or not the instance is authorized
+	 * @returns {boolean}
 	 */
 	public authorized() {
 		return this.loggedin;
@@ -222,10 +222,10 @@ export class SMTPConnection extends EventEmitter {
 	 * NOTE: `host` is trimmed before being used to establish a connection; however, the original untrimmed value will still be visible in configuration.
 	 *
 	 * @public
-	 * @param {SMTPCommandCallback} callback function to call after response
-	 * @param {number} [port] the port to use for the connection
-	 * @param {string} [host] the hostname to use for the connection
-	 * @param {ConnectOptions} [options={}] the options
+	 * @param {SMTPCommandCallback} callback
+	 * @param {number} [port]
+	 * @param {string} [host]
+	 * @param {ConnectOptions} [options={}]
 	 * @returns {void}
 	 */
 	public connect(
@@ -269,7 +269,7 @@ export class SMTPConnection extends EventEmitter {
 		};
 
 		/**
-		 * @param {Error} err err
+		 * @param {Error} err
 		 * @returns {void}
 		 */
 		const connectedErrBack = (err?: Error) => {
@@ -343,8 +343,8 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {string} str the string to send
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {string} str
+	 * @param {SMTPCommandCallback} callback
 	 * @returns {void}
 	 */
 	public send(str: string, callback: SMTPCommandCallback) {
@@ -376,9 +376,9 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {string} cmd command to issue
-	 * @param {SMTPCommandCallback} callback function to call after response
-	 * @param {(number[] | number)} [codes=[250]] array codes
+	 * @param {string} cmd
+	 * @param {SMTPCommandCallback} callback
+	 * @param {(number[] | number)} [codes=[250]] SMTP response code(s)
 	 * @returns {void}
 	 */
 	public command(
@@ -448,8 +448,8 @@ export class SMTPConnection extends EventEmitter {
 	 * As this command was deprecated by rfc2821, it should only be used for compatibility with non-compliant servers.
 	 * @see https://tools.ietf.org/html/rfc2821#appendix-F.3
 	 *
-	 * @param {SMTPCommandCallback} callback function to call after response
-	 * @param {string} [domain] the domain to associate with the 'helo' request
+	 * @param {SMTPCommandCallback} callback
+	 * @param {string} [domain]
 	 * @returns {void}
 	 */
 	public helo(callback: SMTPCommandCallback, domain?: string) {
@@ -465,7 +465,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {SMTPCommandCallback} callback
 	 * @returns {void}
 	 */
 	public starttls(callback: SMTPCommandCallback) {
@@ -503,7 +503,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {string} data the string to parse for features
+	 * @param {string} data
 	 * @returns {void}
 	 */
 	public parse_smtp_features(data: string) {
@@ -533,8 +533,8 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {SMTPCommandCallback} callback function to call after response
-	 * @param {string} [domain] the domain to associate with the 'ehlo' request
+	 * @param {SMTPCommandCallback} callback
+	 * @param {string} [domain]
 	 * @returns {void}
 	 */
 	public ehlo(callback: SMTPCommandCallback, domain?: string) {
@@ -557,7 +557,7 @@ export class SMTPConnection extends EventEmitter {
 	/**
 	 * @public
 	 * @param {string} opt the features keyname to check
-	 * @returns {boolean} whether the extension exists
+	 * @returns {boolean}
 	 */
 	public has_extn(opt: string) {
 		return (this.features ?? {})[opt.toLowerCase()] === undefined;
@@ -566,8 +566,8 @@ export class SMTPConnection extends EventEmitter {
 	/**
 	 * @public
 	 * @description SMTP 'help' command, returns text from the server
-	 * @param {SMTPCommandCallback} callback function to call after response
-	 * @param {string} domain the domain to associate with the 'help' request
+	 * @param {SMTPCommandCallback} callback
+	 * @param {string} domain
 	 * @returns {void}
 	 */
 	public help(callback: SMTPCommandCallback, domain: string) {
@@ -576,7 +576,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {SMTPCommandCallback} callback
 	 * @returns {void}
 	 */
 	public rset(callback: SMTPCommandCallback) {
@@ -585,7 +585,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {SMTPCommandCallback} callback
 	 * @returns {void}
 	 */
 	public noop(callback: SMTPCommandCallback) {
@@ -594,7 +594,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {SMTPCommandCallback} callback
 	 * @param {string} from the sender
 	 * @returns {void}
 	 */
@@ -604,7 +604,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {SMTPCommandCallback} callback
 	 * @param {string} to the receiver
 	 * @returns {void}
 	 */
@@ -614,7 +614,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {SMTPCommandCallback} callback
 	 * @returns {void}
 	 */
 	public data(callback: SMTPCommandCallback) {
@@ -623,7 +623,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {SMTPCommandCallback} callback
 	 * @returns {void}
 	 */
 	public data_end(callback: SMTPCommandCallback) {
@@ -643,8 +643,8 @@ export class SMTPConnection extends EventEmitter {
 	/**
 	 * @public
 	 * @description SMTP 'verify' command -- checks for address validity.
-	 * @param {string} address the address to validate
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {string} address
+	 * @param {SMTPCommandCallback} callback
 	 * @returns {void}
 	 */
 	public verify(address: string, callback: SMTPCommandCallback) {
@@ -654,8 +654,8 @@ export class SMTPConnection extends EventEmitter {
 	/**
 	 * @public
 	 * @description SMTP 'expn' command -- expands a mailing list.
-	 * @param {string} address the mailing list to expand
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {string} address
+	 * @param {SMTPCommandCallback} callback
 	 * @returns {void}
 	 */
 	public expn(address: string, callback: SMTPCommandCallback) {
@@ -669,7 +669,7 @@ export class SMTPConnection extends EventEmitter {
 	 * If there has been no previous EHLO or HELO command self session, self
 	 * method tries ESMTP EHLO first.
 	 *
-	 * @param {SMTPCommandCallback} callback function to call after response
+	 * @param {SMTPCommandCallback} callback
 	 * @param {string} [domain] the domain to associate with the command
 	 * @returns {void}
 	 */
@@ -698,12 +698,12 @@ export class SMTPConnection extends EventEmitter {
 	 *
 	 * This method will return normally if the authentication was successful.
 	 *
-	 * @param {SMTPCommandCallback} callback function to call after response
-	 * @param {string} [user] the username to authenticate with
-	 * @param {string} [password] the password for the authentication
-	 * @param {Object} [options] login options
-	 * @param {string} [options.method] login method
-	 * @param {string} [options.domain] login domain
+	 * @param {SMTPCommandCallback} callback
+	 * @param {string} [user]
+	 * @param {string} [password]
+	 * @param {Object} [options]
+	 * @param {string} [options.method]
+	 * @param {string} [options.domain]
 	 * @returns {void}
 	 */
 	public login(
@@ -721,8 +721,8 @@ export class SMTPConnection extends EventEmitter {
 		const domain = options?.domain || this.domain;
 
 		/**
-		 * @param {Error | null} err err
-		 * @param {unknown} data data
+		 * @param {Error | null} err
+		 * @param {unknown} data
 		 * @returns {void}
 		 */
 		const initiate = (err: Error | null | undefined, data: unknown) => {
@@ -734,7 +734,7 @@ export class SMTPConnection extends EventEmitter {
 			let method: keyof typeof AUTH_METHODS | null = null;
 
 			/**
-			 * @param {string} challenge challenge
+			 * @param {string} challenge
 			 * @returns {string} base64 cram hash
 			 */
 			const encodeCramMd5 = (challenge: string) => {
@@ -785,8 +785,8 @@ export class SMTPConnection extends EventEmitter {
 
 			/**
 			 * handle bad responses from command differently
-			 * @param {Error} err err
-			 * @param {unknown} data data
+			 * @param {Error} err
+			 * @param {unknown} data
 			 * @returns {void}
 			 */
 			const failed = (err: Error, data: unknown) => {
@@ -803,12 +803,12 @@ export class SMTPConnection extends EventEmitter {
 			};
 
 			/**
-			 * @param {Error | SMTPError | null} err err
+			 * @param {Error | SMTPError | null} err
 			 * @param {(
 			 * 	string |
 			 * 	{ code: (string | number), data: string, message: string } |
 			 * 	null
-			 * )} [data] data
+			 * )} [data]
 			 * @returns {void}
 			 */
 			const response: SMTPCommandCallback = (err, data) => {
@@ -821,13 +821,13 @@ export class SMTPConnection extends EventEmitter {
 			};
 
 			/**
-			 * @param {Error | SMTPError | null} err err
+			 * @param {Error | SMTPError | null} err
 			 * @param {(
 			 * 	string |
 			 * 	{ code: (string | number), data: string, message: string } |
 			 * 	null
-			 * )} data data
-			 * @param {string} msg message
+			 * )} data
+			 * @param {string} msg
 			 * @returns {void}
 			 */
 			const attempt: SMTPCommandCallback = (err, data, msg) => {
@@ -847,12 +847,12 @@ export class SMTPConnection extends EventEmitter {
 			};
 
 			/**
-			 * @param {Error | SMTPError | null} err err
+			 * @param {Error | SMTPError | null} err
 			 * @param {(
 			 * 	string |
 			 * 	{ code: (string | number), data: string, message: string } |
 			 * 	null
-			 * )} [data] data
+			 * )} [data]
 			 * @returns {void}
 			 */
 			const attemptUser: SMTPCommandCallback = (err, data) => {
@@ -908,7 +908,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {boolean} [force=false] whether or not to force destroy the connection
+	 * @param {boolean} [force=false]
 	 * @returns {void}
 	 */
 	public close(force = false) {
@@ -936,7 +936,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @param {SMTPCommandCallback} [callback] function to call after response
+	 * @param {SMTPCommandCallback} [callback]
 	 * @returns {void}
 	 */
 	public quit(callback?: SMTPCommandCallback) {

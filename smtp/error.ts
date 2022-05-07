@@ -22,7 +22,7 @@ export class SMTPError extends Error {
 
 	/**
 	 * @protected
-	 * @param {string} message error message
+	 * @param {string} message
 	 */
 	protected constructor(message: string) {
 		super(message);
@@ -30,11 +30,11 @@ export class SMTPError extends Error {
 
 	/**
 	 *
-	 * @param {string} message error message
+	 * @param {string} message
 	 * @param {number} code smtp error state
 	 * @param {Error | null} [error] previous error
 	 * @param {unknown} [smtp] arbitrary data
-	 * @returns {SMTPError} error
+	 * @returns {SMTPError}
 	 */
 	public static create(
 		message: string,

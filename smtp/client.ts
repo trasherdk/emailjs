@@ -44,7 +44,7 @@ export class SMTPClient {
 	/**
 	 * @public
 	 * @template {Message | MessageHeaders} T
-	 * @param {T} msg the message to send
+	 * @param {T} msg
 	 * @param {MessageCallback<T>} callback receiver for the error (if any) as well as the passed-in message / headers
 	 * @returns {void}
 	 */
@@ -71,8 +71,8 @@ export class SMTPClient {
 	/**
 	 * @public
 	 * @template {Message | MessageHeaders} T
-	 * @param {T} msg the message to send
-	 * @returns {Promise<T>} a promise that resolves to the passed-in message / headers
+	 * @param {T} msg
+	 * @returns {Promise<Message>} a promise that resolves to the message / headers
 	 */
 	public sendAsync<T extends Message | MessageHeaders>(msg: T) {
 		return new Promise<Message>((resolve, reject) => {
@@ -176,18 +176,18 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {MessageStack} stack stack
+	 * @param {MessageStack} stack
 	 * @returns {void}
 	 */
 	protected _connect(stack: MessageStack) {
 		/**
-		 * @param {Error | null} err callback error
+		 * @param {Error | null} err
 		 * @returns {void}
 		 */
 		const connect = (err: Error | null) => {
 			if (!err) {
 				/**
-				 * @param {Error | null} err callback error
+				 * @param {Error | null} err
 				 * @returns {void}
 				 */
 				const begin = (err: Error | null) => {
@@ -223,8 +223,8 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {MessageAttachment | MessageAttachment[]} attachment attachment
-	 * @returns {boolean} whether the attachment contains inlined html
+	 * @param {MessageAttachment | MessageAttachment[]} attachment
+	 * @returns {boolean}
 	 */
 	protected _containsInlinedHtml(
 		attachment?: MessageAttachment | MessageAttachment[]
@@ -240,8 +240,8 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {MessageAttachment} attachment attachment
-	 * @returns {boolean} whether the attachment is inlined html
+	 * @param {MessageAttachment} attachment
+	 * @returns {boolean}
 	 */
 	protected _isAttachmentInlinedHtml(attachment?: MessageAttachment) {
 		return (
@@ -253,9 +253,9 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {MessageStack} stack stack
-	 * @param {function(MessageStack): void} next next
-	 * @returns {function(Error): void} callback
+	 * @param {MessageStack} stack
+	 * @param {function(MessageStack): void} next
+	 * @returns {function(Error): void}
 	 */
 	protected _sendsmtp(stack: MessageStack, next: (msg: MessageStack) => void) {
 		return (err: Error | null) => {
@@ -271,7 +271,7 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {MessageStack} stack stack
+	 * @param {MessageStack} stack
 	 * @returns {void}
 	 */
 	protected _sendmail(stack: MessageStack) {
@@ -282,7 +282,7 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {MessageStack} stack stack
+	 * @param {MessageStack} stack
 	 * @returns {void}
 	 */
 	protected _sendrcpt(stack: MessageStack) {
@@ -299,7 +299,7 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {MessageStack} stack stack
+	 * @param {MessageStack} stack
 	 * @returns {void}
 	 */
 	protected _senddata(stack: MessageStack) {
@@ -308,7 +308,7 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {MessageStack} stack stack
+	 * @param {MessageStack} stack
 	 * @returns {void}
 	 */
 	protected _sendmessage(stack: MessageStack) {
@@ -331,8 +331,8 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {Error | null} err err
-	 * @param {MessageStack} stack stack
+	 * @param {Error | null} err
+	 * @param {MessageStack} stack
 	 * @returns {void}
 	 */
 	protected _senddone(err: Error | null, stack: MessageStack) {

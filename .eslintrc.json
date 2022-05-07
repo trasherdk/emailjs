@@ -17,6 +17,12 @@
 			"error",
 			"unix"
 		],
-		"valid-jsdoc": "error"
+		"valid-jsdoc": [
+			"error",
+			{
+				"requireParamDescription": false,
+				"requireReturnDescription": false
+			}
+		]
 	}
 }

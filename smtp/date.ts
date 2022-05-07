@@ -44,7 +44,7 @@ const rfc2822re =
 
 /**
  * @param {string} date a string to check for conformance to the [rfc2822](https://tools.ietf.org/html/rfc2822#section-3.3) standard
- * @returns {boolean} the result of the conformance check
+ * @returns {boolean}
  */
 export function isRFC2822Date(date: string) {
 	return rfc2822re.test(date);
