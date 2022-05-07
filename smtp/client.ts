@@ -179,8 +179,16 @@ export class SMTPClient {
 	 * @returns {void}
 	 */
 	protected _connect(stack: MessageStack) {
+		/**
+		 * @param {Error | null} err callback error
+		 * @returns {void}
+		 */
 		const connect = (err: Error | null) => {
 			if (!err) {
+				/**
+				 * @param {Error | null} err callback error
+				 * @returns {void}
+				 */
 				const begin = (err: Error | null) => {
 					if (!err) {
 						this.ready = true;

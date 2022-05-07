@@ -268,6 +268,10 @@ export class Message {
 		str.on('error', (err) => callback(err, buffer));
 	}
 
+	/**
+	 * @public
+	 * @returns {Promise<string>} promise that resolves to the read result
+	 */
 	public readAsync() {
 		return new Promise<string>((resolve, reject) => {
 			this.read((err, buffer) => {
@@ -282,10 +286,11 @@ export class Message {
 }
 
 class MessageStream extends Stream {
-	readable = true;
-	paused = false;
+	/** @type {Buffer | null} */
 	buffer: Buffer | null = Buffer.alloc(MIMECHUNK * 24 * 7);
 	bufferIndex = 0;
+	paused = false;
+	readable = true;
 
 	/**
 	 * @param {Message} message the message to stream
@@ -400,6 +405,11 @@ class MessageStream extends Stream {
 			}
 		};
 
+		/**
+		 * @param {MessageAttachment} attachment attachment
+		 * @param {function((NodeJS.ErrnoException | null)): void} next next
+		 * @returns {void}
+		 */
 		const outputFile = (
 			attachment: MessageAttachment,
 			next: (err: NodeJS.ErrnoException | null) => void
@@ -505,6 +515,11 @@ class MessageStream extends Stream {
 			}
 		};
 
+		/**
+		 * @param {MessageAttachment} attachment attachment
+		 * @param {function(): void} callback the function to call
+		 * @returns {void}
+		 */
 		const outputAttachment = (
 			attachment: MessageAttachment,
 			callback: () => void
@@ -548,6 +563,9 @@ class MessageStream extends Stream {
 			}
 		};
 
+		/**
+		 * @returns {void}
+		 */
 		const outputMixed = () => {
 			const boundary = generateBoundary();
 			output(
@@ -656,6 +674,10 @@ class MessageStream extends Stream {
 			}
 		};
 
+		/**
+		 * @param {Error} [err] err
+		 * @returns {void}
+		 */
 		const close = (err?: Error) => {
 			if (err) {
 				this.emit('error', err);

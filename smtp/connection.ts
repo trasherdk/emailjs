@@ -101,6 +101,7 @@ export class SMTPConnection extends EventEmitter {
 		AUTH_METHODS.XOAUTH2,
 	];
 
+	/** @type {SMTPState} */
 	protected _state: 0 | 1 | 2 = SMTPState.NOTCONNECTED;
 	protected _secure = false;
 	protected loggedin = false;
@@ -198,7 +199,7 @@ export class SMTPConnection extends EventEmitter {
 
 	/**
 	 * @public
-	 * @returns {0 | 1 | 2} the current state
+	 * @returns {SMTPState} the current state
 	 */
 	public state() {
 		return this._state;
@@ -716,6 +717,11 @@ export class SMTPConnection extends EventEmitter {
 
 		const domain = options?.domain || this.domain;
 
+		/**
+		 * @param {Error | null} err err
+		 * @param {unknown} data data
+		 * @returns {void}
+		 */
 		const initiate = (err: Error | null | undefined, data: unknown) => {
 			if (err) {
 				callback(err);
@@ -793,6 +799,15 @@ export class SMTPConnection extends EventEmitter {
 				);
 			};
 
+			/**
+			 * @param {Error | SMTPError | null} err err
+			 * @param {(
+			 * 	string |
+			 * 	{ code: (string | number), data: string, message: string } |
+			 * 	null
+			 * )} [data] data
+			 * @returns {void}
+			 */
 			const response: SMTPCommandCallback = (err, data) => {
 				if (err) {
 					failed(err, data);
@@ -802,6 +817,16 @@ export class SMTPConnection extends EventEmitter {
 				}
 			};
 
+			/**
+			 * @param {Error | SMTPError | null} err err
+			 * @param {(
+			 * 	string |
+			 * 	{ code: (string | number), data: string, message: string } |
+			 * 	null
+			 * )} data data
+			 * @param {string} msg message
+			 * @returns {void}
+			 */
 			const attempt: SMTPCommandCallback = (err, data, msg) => {
 				if (err) {
 					failed(err, data);
@@ -818,6 +843,15 @@ export class SMTPConnection extends EventEmitter {
 				}
 			};
 
+			/**
+			 * @param {Error | SMTPError | null} err err
+			 * @param {(
+			 * 	string |
+			 * 	{ code: (string | number), data: string, message: string } |
+			 * 	null
+			 * )} [data] data
+			 * @returns {void}
+			 */
 			const attemptUser: SMTPCommandCallback = (err, data) => {
 				if (err) {
 					failed(err, data);
