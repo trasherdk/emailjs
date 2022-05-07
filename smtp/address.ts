@@ -39,7 +39,7 @@ function tokenizeAddress(address: string | string[] = '') {
 	let token: AddressToken | undefined = undefined;
 	let operator: string | undefined = undefined;
 
-	for (const character of address.toString()) {
+	for (const character of address.toString().split('')) {
 		if ((operator?.length ?? 0) > 0 && character === operator) {
 			tokens.push({ type: 'operator', value: character });
 			token = undefined;
