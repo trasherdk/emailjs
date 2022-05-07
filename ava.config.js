@@ -7,6 +7,4 @@ export default {
 	},
 	files: ['test/*.ts'],
 	nodeArguments: ['--loader=ts-node/esm'],
-	// crashes v8 entirely
-	workerThreads: false,
 };
