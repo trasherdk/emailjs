@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import type { PathLike } from 'fs';
 import {
 	existsSync,
@@ -7,6 +8,7 @@ import {
 	read as readFile,
 } from 'fs';
 import { hostname } from 'os';
+import { nextTick, pid } from 'process';
 import { Stream } from 'stream';
 import type { Readable } from 'stream';
 
@@ -117,9 +119,7 @@ function convertDashDelimitedTextToSnakeCase(text: string) {
 export class Message {
 	public readonly attachments: MessageAttachment[] = [];
 	public readonly header: Partial<MessageHeaders> = {
-		'message-id': `<${new Date().getTime()}.${counter++}.${
-			process.pid
-		}@${hostname()}>`,
+		'message-id': `<${new Date().getTime()}.${counter++}.${pid}@${hostname()}>`,
 		date: getRFC2822Date(),
 	};
 	public readonly content: string = 'text/plain; charset=utf-8';
@@ -741,7 +741,7 @@ class MessageStream extends Stream {
 		};
 
 		this.once('destroy', close);
-		process.nextTick(outputHeader);
+		nextTick(outputHeader);
 	}
 
 	/**

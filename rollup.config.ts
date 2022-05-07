@@ -7,7 +7,6 @@ export default {
 		file: 'email.js',
 		format: 'es',
 		sourcemap: true,
-		banner: '/* eslint-disable no-undef */',
 		footer: `
 			/**
 			 * @typedef {{ [index: string]: any }} AddressObject

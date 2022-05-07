@@ -1,7 +1,10 @@
+import { Buffer } from 'buffer';
+import console from 'console';
 import { createHmac } from 'crypto';
 import { EventEmitter } from 'events';
 import { Socket } from 'net';
 import { hostname } from 'os';
+import { setTimeout } from 'timers';
 import { connect, createSecureContext, TLSSocket } from 'tls';
 import type { ConnectionOptions } from 'tls';
 

@@ -1,3 +1,5 @@
+import { clearTimeout, setTimeout } from 'timers';
+
 import { addressparser } from './address.js';
 import type { MessageAttachment, MessageHeaders } from './message.js';
 import { Message } from './message.js';
