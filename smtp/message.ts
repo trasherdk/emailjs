@@ -647,10 +647,14 @@ class MessageStream extends Stream {
 		 * @param {function(): void} callback the function to call after output is finished
 		 * @returns {void}
 		 */
-		const outputAlternative = (
-			message: Message & { alternative: MessageAttachment },
-			callback: () => void
-		) => {
+		const outputAlternative = (message: Message, callback: () => void) => {
+			const { alternative } = message;
+			if (alternative == null) {
+				throw new Error(
+					`Message passed to outputAlternative without its "alternative" property set: ${message.header.subject}`
+				);
+			}
+
 			const boundary = generateBoundary();
 			output(
 				`Content-Type: multipart/alternative; boundary="${boundary}"${CRLF}${CRLF}--${boundary}${CRLF}`
@@ -666,7 +670,6 @@ class MessageStream extends Stream {
 				callback();
 			};
 
-			const { alternative } = message;
 			if (alternative.related) {
 				outputRelated(alternative, finish);
 			} else {
