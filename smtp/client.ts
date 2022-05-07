@@ -74,7 +74,7 @@ export class SMTPClient {
 	 */
 	public sendAsync<T extends Message | MessageHeaders>(msg: T) {
 		return new Promise<Message>((resolve, reject) => {
-			this.send(msg, (err, message) => {
+			this.send(msg, (err, /** @type {any} */ message) => {
 				if (err != null) {
 					reject(err);
 				} else {
