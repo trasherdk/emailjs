@@ -62,6 +62,7 @@
 	"scripts": {
 		"build": "rollup -c rollup.config.ts",
 		"lint": "eslint *.ts \"+(smtp|test)/*.ts\"",
+		"prepublishOnly": "eslint --fix email.js",
 		"pretest": "yarn build",
 		"test": "ava"
 	},
