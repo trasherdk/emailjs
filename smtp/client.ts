@@ -100,16 +100,19 @@ export class SMTPClient {
 		}
 	) {
 		const [{ address: from = '' }] = addressparser(message.header.from);
-		const stack: MessageStack = {
-			message,
-			to: [],
-			from,
-			callback: callback.bind(this),
-		};
-
 		const {
 			header: { to, cc, bcc, 'return-path': returnPath },
 		} = message;
+
+		const stack: MessageStack = {
+			message,
+			to:
+				(typeof to === 'string' || Array.isArray(to)) && to.length > 0
+					? addressparser(to)
+					: [],
+			from,
+			callback: callback.bind(this),
+		};
 
 		if ((typeof to === 'string' || Array.isArray(to)) && to.length > 0) {
 			stack.to = addressparser(to);
