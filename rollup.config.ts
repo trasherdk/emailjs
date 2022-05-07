@@ -1,4 +1,4 @@
-import { builtinModules } from 'module';
+import module from 'module';
 import typescript from '@rollup/plugin-typescript';
 
 export default {
@@ -26,7 +26,7 @@ export default {
 			.trim()
 			.replace(/\t/g, ''),
 	},
-	external: builtinModules,
+	external: module.builtinModules,
 	plugins: [
 		typescript({ removeComments: false, include: ['email.ts', 'smtp/*'] }),
 	],
