@@ -17,7 +17,7 @@ function connect({
 	return new Promise<void>((resolve, reject) => {
 		const server = new SMTPServer({
 			authMethods,
-			secure: secure,
+			secure,
 			onAuth(auth, _session, callback) {
 				const { accessToken, method, username, password } = auth;
 				if (

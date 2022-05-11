@@ -163,7 +163,7 @@ export class Message {
 				this.header.subject = mimeWordEncode(headers.subject as string);
 			} else if (/^(cc|bcc|to|from)/i.test(header)) {
 				this.header[header.toLowerCase()] = convertPersonToAddress(
-					headers[header] as string | string[]
+					headers[header as 'cc' | 'bcc' | 'to' | 'from'] ?? ''
 				);
 			} else {
 				// allow any headers the user wants to set??

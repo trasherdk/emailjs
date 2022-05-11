@@ -84,23 +84,18 @@ test('synchronous queue failures are handled gracefully by client', async (t) =>
 		})
 	);
 
+	// @ts-expect-error need to check protected prop
+	const { ready, sending, smtp } = tlsClient;
+	const state = smtp.state();
+
 	t.log(
-		`SMTPClient ${JSON.stringify(
-			{
-				// @ts-expect-error need to check protected prop
-				ready: tlsClient.ready,
-				// @ts-expect-error need to check protected prop
-				sending: tlsClient.sending,
-				state: tlsClient.smtp.state(),
-			},
-			null,
-			'\t'
-		).replace(/"/g, '')}`
+		`SMTPClient ${JSON.stringify({ ready, sending, state }, null, '\t').replace(
+			/"/g,
+			''
+		)}`
 	);
 
-	// @ts-expect-error need to check protected prop
-	t.false(tlsClient.ready);
-	// @ts-expect-error need to check protected prop
-	t.false(tlsClient.sending);
-	t.is(tlsClient.smtp.state(), 0);
+	t.false(ready);
+	t.false(sending);
+	t.is(state, 0);
 });
