@@ -122,8 +122,12 @@ test('client accepts array sender', async (t) => {
 	});
 	msg.header.from = [msg.header.from as string];
 
-	const { isValid } = msg.checkValidity();
-	t.true(isValid);
+	const message = await client.sendAsync(msg);
+	t.is(message.text, msg.text);
+	t.deepEqual(message.header.from, ['zelda@gmail.com']);
+	t.is(message.header.to, 'gannon1@gmail.com');
+	t.is(message.header.cc, undefined);
+	t.is(message.header.bcc, undefined);
 });
 
 test('client rejects message without `from` header', async (t) => {

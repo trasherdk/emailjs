@@ -380,6 +380,21 @@ test('text + two attachments message (streams)', async (t) => {
 	t.is(mail.to?.text, msg.to);
 });
 
+test('message validation succeeds when `from` header is an array', async (t) => {
+	const msg = new Message({
+		from: ['zelda@gmail.com'],
+		to: 'gannon1@gmail.com',
+	});
+
+	t.false(Array.isArray(msg.header.from));
+
+	msg.header.from = [msg.header.from as string];
+	const { isValid } = msg.checkValidity();
+
+	t.true(Array.isArray(msg.header.from));
+	t.true(isValid);
+});
+
 test('message validation fails without `from` header', async (t) => {
 	const msg = new Message({});
 	const { isValid, validationError } = msg.checkValidity();
