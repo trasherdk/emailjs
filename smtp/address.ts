@@ -31,7 +31,7 @@ const OPERATORS = new Map([
 /**
  * Tokenizes the original input string
  *
- * @param {string | string[] | undefined} address string(s) to tokenize
+ * @param {string | string[]} [address=''] string(s) to tokenize
  * @return {AddressToken[]} An array of operator & text tokens
  */
 function tokenizeAddress(address: string | string[] = '') {
@@ -208,7 +208,7 @@ function convertAddressTokens(tokens: AddressToken[]) {
  *
  *     [{name: "Name", address: "address@domain"}]
  *
- * @param {string | string[] | undefined} address
+ * @param {string | string[] | undefined} [address]
  * @return {AddressObject[]}
  */
 export function addressparser(address?: string | string[]) {

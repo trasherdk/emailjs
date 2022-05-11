@@ -1,6 +1,6 @@
 /**
- * @param {Date} [date] an optional date to convert to RFC2822 format
- * @param {boolean} [useUtc] whether to parse the date as UTC (default: false)
+ * @param {Date} [date=new Date()] an optional date to convert to RFC2822 format
+ * @param {boolean} [useUtc=false] whether to parse the date as UTC (default: false)
  * @returns {string} the converted date
  */
 export function getRFC2822Date(date = new Date(), useUtc = false) {
@@ -24,7 +24,7 @@ export function getRFC2822Date(date = new Date(), useUtc = false) {
 }
 
 /**
- * @param {Date} [date] an optional date to convert to RFC2822 format (UTC)
+ * @param {Date} [date=new Date()] an optional date to convert to RFC2822 format (UTC)
  * @returns {string} the converted date
  */
 export function getRFC2822DateUTC(date = new Date()) {

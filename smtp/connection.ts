@@ -785,11 +785,15 @@ export class SMTPConnection extends EventEmitter {
 
 			/**
 			 * handle bad responses from command differently
-			 * @param {Error} err
-			 * @param {unknown} data
+			 * @param {Error | SMTPError | null} err
+			 * @param {(
+			 * 	string |
+			 * 	{ code: (string | number), data: string, message: string } |
+			 * 	null
+			 * )} [data]
 			 * @returns {void}
 			 */
-			const failed = (err: Error, data: unknown) => {
+			const failed: SMTPCommandCallback = (err, data) => {
 				this.loggedin = false;
 				this.close(); // if auth is bad, close the connection, it won't get better by itself
 				callback(

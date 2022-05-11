@@ -35,7 +35,7 @@ export class SMTPClient {
 	 *
 	 * NOTE: `host` is trimmed before being used to establish a connection; however, the original untrimmed value will still be visible in configuration.
 	 *
-	 * @param {SMTPConnectionOptions} server smtp options
+	 * @param {Partial<SMTPConnectionOptions>} server smtp options
 	 */
 	constructor(server: Partial<SMTPConnectionOptions>) {
 		this.smtp = new SMTPConnection(server);
@@ -223,7 +223,7 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {MessageAttachment | MessageAttachment[]} attachment
+	 * @param {MessageAttachment | MessageAttachment[]} [attachment]
 	 * @returns {boolean}
 	 */
 	protected _containsInlinedHtml(
@@ -240,7 +240,7 @@ export class SMTPClient {
 
 	/**
 	 * @protected
-	 * @param {MessageAttachment} attachment
+	 * @param {MessageAttachment} [attachment]
 	 * @returns {boolean}
 	 */
 	protected _isAttachmentInlinedHtml(attachment?: MessageAttachment) {

@@ -71,7 +71,7 @@ function encodeBase64(data: Uint8Array) {
  * Splits a mime encoded string. Needed for dividing mime words into smaller chunks
  *
  * @param {string} str Mime encoded string to be split up
- * @param {number} maxlen Maximum length of characters for one part (minimum 12)
+ * @param {number} [maxlen=12] Maximum length of characters for one part (minimum 12)
  * @return {string[]} lines
  */
 function splitMimeEncodedString(str: string, maxlen = 12) {
@@ -127,17 +127,17 @@ function checkRanges(nr: number) {
 
 /**
  * Encodes all non printable and non ascii bytes to =XX form, where XX is the
- * byte value in hex. This function does not convert linebreaks etc. it
- * only escapes character sequences
+ * byte value in hex. This function only escapes character sequences; it does not
+ * convert linebreaks etc.
  *
- * NOTE: Encoding support depends on util.TextDecoder, which is severely limited
+ * NOTE: Encoding support depends on `util.TextDecoder`, which lacks full ICU support
  * prior to Node.js 13.
  *
  * @see https://nodejs.org/api/util.html#util_whatwg_supported_encodings
  * @see https://github.com/nodejs/node/issues/19214
  *
- * @param {string|Uint8Array} data Either a string or an Uint8Array
- * @param {string} encoding WHATWG supported encoding
+ * @param {string | Uint8Array} [data='']
+ * @param {string} [encoding='utf-8'] WHATWG supported encoding
  * @return {string} Mime encoded string
  */
 export function mimeEncode(data: string | Uint8Array = '', encoding = 'utf-8') {
@@ -168,16 +168,16 @@ export function mimeEncode(data: string | Uint8Array = '', encoding = 'utf-8') {
 /**
  * Encodes a string or an Uint8Array to an UTF-8 MIME Word
  *
- * NOTE: Encoding support depends on util.TextDecoder, which is severely limited
+ * NOTE: Encoding support depends on `util.TextDecoder`, which lacks full ICU support
  * prior to Node.js 13.
  *
  * @see https://tools.ietf.org/html/rfc2047
  * @see https://nodejs.org/api/util.html#util_whatwg_supported_encodings
  * @see https://github.com/nodejs/node/issues/19214
  *
- * @param {string|Uint8Array} data String to be encoded
- * @param {'Q' | 'B'} mimeWordEncoding='Q' Encoding for the mime word, either Q or B
- * @param {string} encoding WHATWG supported encoding
+ * @param {string | Uint8Array} data
+ * @param {'Q' | 'B'} [mimeWordEncoding='Q']
+ * @param {string} [encoding='utf-8'] WHATWG supported encoding
  * @return {string} Single or several mime words joined together
  */
 export function mimeWordEncode(

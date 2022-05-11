@@ -5,6 +5,11 @@ import type { TLSSocket } from 'tls';
 export class SMTPResponseMonitor {
 	public readonly stop: (err?: Error) => void;
 
+	/**
+	 * @param {Socket | TLSSocket} stream
+	 * @param {number} timeout
+	 * @param {function(Error): void} onerror
+	 */
 	constructor(
 		stream: Socket | TLSSocket,
 		timeout: number,
